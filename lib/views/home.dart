@@ -1,13 +1,12 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wallpaper_hub/data/data.dart';
-import 'package:wallpaper_hub/models/wallpaper_model.dart';
+import 'package:wallpaper_hub/provider/hub_provider.dart';
 import 'package:wallpaper_hub/views/categories.dart';
 import 'package:wallpaper_hub/views/search.dart';
 import 'package:wallpaper_hub/widgets/widget.dart';
-import 'package:http/http.dart' as http;
 import '../models/categories_model.dart';
-
+import '../models/wallpaper_model.dart';
 class MyHome extends StatefulWidget {
   const MyHome({super.key});
 
@@ -16,27 +15,15 @@ class MyHome extends StatefulWidget {
 }
 
 class _MyHomeState extends State<MyHome> {
+  late WallpaperProvider provider;
   List<CategoriesModel> categories = [];
-  List<WallpaperModel> wallpapers = [];
   TextEditingController searchController = TextEditingController();
-
-  getTrendingWallpapers() async {
-    var response = await http.get(
-        Uri.parse("https://api.pexels.com/v1/curated?per_page=50"),
-        headers: {'Authorization': apiKey});
-    Map<String, dynamic> jsonData = jsonDecode(response.body);
-    jsonData['photos'].forEach((element) {
-      WallpaperModel wallpaperModel = WallpaperModel();
-      wallpaperModel = WallpaperModel.fromMap(element);
-      wallpapers.add(wallpaperModel);
-    });
-    setState(() {});
-  }
 
   @override
   void initState() {
-    getTrendingWallpapers();
+    provider = context.read<WallpaperProvider>();
     categories = getCategories()!;
+    provider.getTrendingWallpapers();
     super.initState();
   }
 
@@ -45,6 +32,7 @@ class _MyHomeState extends State<MyHome> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.yellow,
         title: BrandName(),
         elevation: 0.0,
       ),
@@ -52,54 +40,55 @@ class _MyHomeState extends State<MyHome> {
         child: Container(
           child: Column(
             children: [
+              const SizedBox(height: 14,),
               Container(
                 decoration: BoxDecoration(
                     color: Colors.grey,
                     borderRadius: BorderRadius.circular(38)),
-                padding: EdgeInsets.symmetric(horizontal: 24),
-                margin: EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                margin: const EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
                   children: [
                     Expanded(
                       child: TextField(
                         controller: searchController,
                         decoration: const InputDecoration(
-                            hintText: 'search wallpaper',
+                            hintText: 'Search wallpaper',
                             border: InputBorder.none),
                       ),
                     ),
                     GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => Search(
-                                searchQuery: searchController.text,
-                              ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Search(
+                              searchQuery: searchController.text,
                             ),
-                          );
-                        },
-                        child: Container(child: Icon(Icons.search)))
+                          ),
+                        );
+                      },
+                      child: const Icon(Icons.search),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(
-                height: 16,
+              const SizedBox(height: 16),
+              Consumer<WallpaperProvider>(
+                  builder: (BuildContext context, value, Widget? child) {
+                var wallpapers = value.wallpapers;
+                if (wallpapers.isNotEmpty) {
+                  return wallpaperList(
+                      wallpapers: wallpapers, context: context,
+                      favorite: (WallpaperModel item) {
+                        provider.selectFavorite(item);
+                      });
+                }
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+               },
               ),
-              Container(
-                height: 80,
-                child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemCount: categories.length,
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      return CategorieTile(
-                          title: categories[index].categorieName!,
-                          imgUrl: categories[index].imgUrl!);
-                    }),
-              ),
-              wallpaperList(wallpapers: wallpapers, context: context)
             ],
           ),
         ),
@@ -126,25 +115,27 @@ class CategorieTile extends StatelessWidget {
         );
       },
       child: Container(
+        alignment: Alignment.center,
         margin: EdgeInsets.only(right: 5),
         child: Stack(
           children: [
             ClipRRect(
+
                 borderRadius: BorderRadius.circular(24),
                 child: Image.network(
                   imgUrl,
-                  height: 50,
-                  width: 100,
+                  height: 100,
+                  width: 300,
                   fit: BoxFit.cover,
                 )),
             Container(
-              alignment: Alignment.center,
-              height: 50,
+              alignment: Alignment.topCenter,
+              height: 100,
               width: 100,
               child: Text(
                 title,
                 style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                   const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
               ),
             ),
           ],

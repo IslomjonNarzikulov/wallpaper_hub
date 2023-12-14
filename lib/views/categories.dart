@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:wallpaper_hub/provider/hub_provider.dart';
 import '../data/data.dart';
+import '../models/categories_model.dart';
 import '../models/wallpaper_model.dart';
 import '../widgets/widget.dart';
 
@@ -33,7 +36,9 @@ class _CategoriesState extends State<Categories> {
 
   @override
   void initState() {
+    // provider = context.read<WallpaperProvider>();
     getSearchingWallpapers(widget.categoryName);
+    // categories = getCategories()!;
     super.initState();
   }
 
@@ -48,7 +53,7 @@ class _CategoriesState extends State<Categories> {
         child: Container(
           child: Column(children: [
             const SizedBox(height: 24,),
-            wallpaperList(wallpapers: wallpapers, context: context)
+            wallpaperList(wallpapers: wallpapers, context: context, favorite: (WallpaperModel item) {  })
           ]),
         ),
       ),
