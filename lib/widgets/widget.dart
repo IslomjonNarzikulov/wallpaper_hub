@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../models/wallpaper_model.dart';
-import '../views/image_view.dart';
+import '../domain/models/wallpaper_model.dart';
+import '../ui/image/image_view.dart';
 
 Widget BrandName() {
   return const Row(
@@ -21,7 +21,7 @@ Widget BrandName() {
 Widget wallpaperList(
     {required List<WallpaperModel> wallpapers,
     context,
-    required void Function(WallpaperModel item)? favorite}) {
+    required void Function(WallpaperModel? item)? favorite}) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 16),
     child: GridView.count(
@@ -33,8 +33,7 @@ Widget wallpaperList(
       mainAxisSpacing: 6,
       crossAxisSpacing: 6,
       children: wallpapers.map(
-        (WallpaperModel wallpaperModel) {
-          bool isFavorite = false;
+        (WallpaperModel model) {
           return GridTile(
             child: GestureDetector(
               onTap: () {
@@ -42,39 +41,42 @@ Widget wallpaperList(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ImageView(
-                      imageUrl: wallpaperModel.src!.portrait!,
+                      imageUrl: model.src!.portrait!,
                     ),
                   ),
                 );
               },
               child: Hero(
                 //rasm kattalashtirish
-                tag: wallpaperModel.src!.portrait!,
+                tag: model.src!.portrait!,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Stack(
                     children: [
                       Image.network(
-                        wallpaperModel.src!.portrait!,
+                        model.src!.portrait!,
                         fit: BoxFit.cover,
                       ),
                       Positioned(
                         bottom: 35,
                         right: 5,
-                        child: InkWell(
-                            onTap: () {
-                              favorite!(wallpaperModel);
-                              print('tapped');
-                            },
-                            child: wallpaperModel.isFavorite == true
-                                ? const Icon(
-                                    Icons.favorite,
-                                    color: Colors.red,
-                                  )
-                                : const Icon(
-                                    Icons.favorite_border,
-                                    color: Colors.red,
-                                  )),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                              onTap: () {
+                                favorite!(model);
+                                print('tapped');
+                              },
+                              child: model.isFavorite == true
+                                  ? const Icon(
+                                      Icons.favorite,
+                                      color: Colors.red,
+                                    )
+                                  : const Icon(
+                                      Icons.favorite_border,
+                                      color: Colors.red,
+                                    )),
+                        ),
                       ),
                     ],
                   ),
